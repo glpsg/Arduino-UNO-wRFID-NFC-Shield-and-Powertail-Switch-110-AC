@@ -4,7 +4,7 @@
     @author   Adafruit Industries
 	@license  BSD (see license.txt)
 
-    This example will wait for any ISO14443A card or tag, and
+    This code will wait for any ISO14443A card or tag, and
     depending on the size of the UID will attempt to read from it.
    
     If the card has a 4-byte UID it is probably a Mifare
@@ -28,9 +28,6 @@ This library works with the Adafruit NFC breakout
 Check out the links above for our tutorials and wiring diagrams 
 These chips use SPI or I2C to communicate.
 
-Adafruit invests time and resources providing this open source code, 
-please support Adafruit and open-source hardware by purchasing 
-products from Adafruit!
 
 */
 /**************************************************************************/
@@ -38,30 +35,14 @@ products from Adafruit!
 #include <SPI.h>
 #include <Adafruit_PN532.h>
 
-// If using the breakout with SPI, define the pins for SPI communication.
-#define PN532_SCK  (2)
-#define PN532_MOSI (3)
-#define PN532_SS   (4)
-#define PN532_MISO (5)
 
 // If using the breakout or shield with I2C, define just the pins connected
 // to the IRQ and reset lines.  Use the values below (2, 3) for the shield!
 #define PN532_IRQ   (2)
 #define PN532_RESET (3)  // Not connected by default on the NFC Shield
 
-// Uncomment just _one_ line below depending on how your breakout or shield
-// is connected to the Arduino:
 
-// Use this line for a breakout with a software SPI connection (recommended):
-//Adafruit_PN532 nfc(PN532_SCK, PN532_MISO, PN532_MOSI, PN532_SS);
-
-// Use this line for a breakout with a hardware SPI connection.  Note that
-// the PN532 SCK, MOSI, and MISO pins need to be connected to the Arduino's
-// hardware SPI SCK, MOSI, and MISO pins.  On an Arduino Uno these are
-// SCK = 13, MOSI = 11, MISO = 12.  The SS line can be any digital IO pin.
-//Adafruit_PN532 nfc(PN532_SS);
-
-// Or use this line for a breakout or shield with an I2C connection:
+// Use this line for a breakout or shield with an I2C connection:
 Adafruit_PN532 nfc(PN532_IRQ, PN532_RESET);
 
 #if defined(ARDUINO_ARCH_SAMD)
@@ -70,20 +51,21 @@ Adafruit_PN532 nfc(PN532_IRQ, PN532_RESET);
    #define Serial SerialUSB
 #endif
 
-boolean lightsOn = false;
+boolean lightsOn = false; // The light is defined as off when the system first boots up
 
 void setup(void) {
   #ifndef ESP8266
-    while (!Serial); // for Leonardo/Micro/Zero
+    while (!Serial); 
   #endif
   Serial.begin(115200);
-  Serial.println("Hello!");
+  Serial.println("Hello!"); 
 
-  pinMode(12, OUTPUT);
+  pinMode(12, OUTPUT); // This section sets up Pin 12 as the data line that will talk to the powerstrip
 
-  nfc.begin();
+  nfc.begin(); //This section starts the NFC on the RFID shield
 
  
+// This section uses the Serial Monitor to confirm that the RFID shield starts up and loads correctly
 
   uint32_t versiondata = nfc.getFirmwareVersion();
   if (! versiondata) {
@@ -98,7 +80,7 @@ void setup(void) {
   // configure board to read RFID tags
   nfc.SAMConfig();
   
-  Serial.println("Waiting for an ISO14443A Card ...");
+  Serial.println("Waiting for an ISO14443A Card ..."); 
   Serial.println("");
 }
 
@@ -116,20 +98,22 @@ void loop(void) {
   uint32_t cardidentifier = 0;
   
   if (success) {
-    // Display some basic information about the card
      Serial.print("Card detected #");
     // turn the four byte UID of a mifare classic into a single variable #
     cardidentifier = uid[3];
     cardidentifier <<= 8; cardidentifier |= uid[2];
     cardidentifier <<= 8; cardidentifier |= uid[1];
     cardidentifier <<= 8; cardidentifier |= uid[0];
-    Serial.println(cardidentifier);
+    Serial.println(cardidentifier); //This section reads the card # and prints it in the serial monitor
 
-    if (cardidentifier == 4229978145 && lightsOn == false) { 
+
+//This Section turns on power strip if the correct card # is read, an affirmative message is sent to the serial monitor
+    if (cardidentifier == 4229978145 && lightsOn == false) {
       Serial.println("Hello, I will turn on now.");
       digitalWrite(12, HIGH);
       delay(1000);
     }  
+    //This section turns the light off if it is already on upon seeing a specific card #
     if (cardidentifier == 4229978145 && lightsOn == true) { 
       Serial.println("Hello, I will turn off now.");
       digitalWrite(12, LOW);
